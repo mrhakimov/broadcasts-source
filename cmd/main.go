@@ -1,7 +1,8 @@
 package main
 
 import (
-	"github.com/mrhakimov/broadcasts-benchmarking/pkg/handlers"
+	"github.com/mrhakimov/broadcasts-source/pkg/brb"
+	"github.com/mrhakimov/broadcasts-source/pkg/cebrb"
 	"log"
 	"net/http"
 	"os"
@@ -15,10 +16,16 @@ func main() {
 	log.SetFlags(log.Lmicroseconds | log.Ldate)
 	log.SetOutput(file)
 
-	http.HandleFunc("/broadcast", handlers.Broadcast)
-	http.HandleFunc("/deliver/send", handlers.Send)
-	http.HandleFunc("/deliver/echo", handlers.Echo)
-	http.HandleFunc("/deliver/ready", handlers.Ready)
+	http.HandleFunc("/brb/broadcast", brb.Broadcast)
+	http.HandleFunc("/brb/clear", brb.Clear)
+	http.HandleFunc("/brb/deliver/send", brb.Send)
+	http.HandleFunc("/brb/deliver/echo", brb.Echo)
+	http.HandleFunc("/brb/deliver/ready", brb.Ready)
+
+	http.HandleFunc("/cebrb/broadcast", cebrb.Broadcast)
+	http.HandleFunc("/cebrb/clear", cebrb.Clear)
+	http.HandleFunc("/cebrb/deliver/init", cebrb.Init)
+	http.HandleFunc("/cebrb/deliver/witness", cebrb.Witness)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

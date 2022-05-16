@@ -1,3 +1,3 @@
-module github.com/mrhakimov/broadcasts-benchmarking
+module github.com/mrhakimov/broadcasts-source
 
 go 1.18

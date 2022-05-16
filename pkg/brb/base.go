@@ -1,4 +1,4 @@
-package handlers
+package brb
 
 import (
 	"fmt"
@@ -6,12 +6,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
 
 const (
-	sourceHost      = "http://localhost:8080"
-	byzantineFactor = 3
+	sourceHost = "http://localhost:8080"
+	//byzantineFactor = 3
 )
 
 var (
@@ -46,19 +47,30 @@ func init() {
 		log.Fatalln("unable to read hosts: ", err)
 	}
 
-	hosts = strings.Split(string(data), "\n")
-	log.Println("hosts: ", hosts)
-
-	clear()
+	allData := strings.Split(string(data), "\n")
+	hosts = allData[1:]
+	f1, _ := strconv.ParseInt(allData[0], 10, 32)
+	f = int(f1)
+	//log.Println("hosts: ", hosts)
 
 	n = len(hosts)
-	f = n / byzantineFactor
+	//f = n / byzantineFactor
+
+	clear()
+}
+
+func makeClearRequest(host string) {
+	_, err := http.Get(fmt.Sprintf("%s/brb/clear", host))
+	if err != nil {
+		//log.Fatalf("unable to reach host '%s'", host)
+	}
 }
 
 func makeRequest(rType, message, from, host string) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/deliver/%s", host, rType), nil)
+	//log.Println(fmt.Sprintf("%s -> %s - %s %s", from, host, rType, message))
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/brb/deliver/%s", host, rType), nil)
 	if err != nil {
-		log.Fatalln("unable to reach host: ", err)
+		//log.Fatalln("unable to reach host: ", err)
 	}
 
 	q := req.URL.Query()
@@ -66,11 +78,11 @@ func makeRequest(rType, message, from, host string) {
 	q.Add("from", from)
 	req.URL.RawQuery = q.Encode()
 
-	log.Println(req.URL.String())
+	//log.Println(req.URL.String())
 
 	_, err = http.Get(req.URL.String())
 	if err != nil {
-		log.Fatalf("unable to reach host '%s'", host)
+		//log.Fatalf("unable to reach host '%s'", host)
 	}
 }
 
@@ -80,6 +92,10 @@ func Broadcast(w http.ResponseWriter, r *http.Request) {
 	message := r.URL.Query().Get("message")
 	if message == "" {
 		log.Fatalln("empty messages are not allowed")
+	}
+
+	for _, host := range hosts {
+		makeClearRequest(host)
 	}
 
 	for _, host := range hosts {
@@ -131,6 +147,10 @@ func Ready(_ http.ResponseWriter, r *http.Request) {
 	checkDeliver()
 }
 
+func Clear(_ http.ResponseWriter, _ *http.Request) {
+	clear()
+}
+
 func checkReady1() {
 	messagesCnt := make(map[string]int)
 
@@ -175,9 +195,9 @@ func checkDeliver() {
 	for message, cnt := range messagesCnt {
 		if message != "" && cnt > 2*f && !delivered {
 			delivered = true
-			log.Printf("%s delivered message %s", sourceHost, message)
+			log.Printf("%s delivered message %s", sourceHost, "0") // replace 0 with message
 
-			clear()
+			//clear()
 		}
 	}
 }
